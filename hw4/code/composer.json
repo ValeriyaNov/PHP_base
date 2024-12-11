@@ -1,0 +1,15 @@
+{
+    "name": "root/code",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Root\\Code\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ll"
+        }
+    ],
+    "require": {}
+}
