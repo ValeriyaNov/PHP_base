@@ -36,30 +36,6 @@ class Render {
         }
         
     }
-    // public function renderPage(array $props = [], $tplContent = '', $tplMain = 'content/main'): string
-    // {
-    //     $vars = array_merge($props, [
-    //         'template_main' => $tplMain ? "$tplMain.twig" : null,
-    //         'template_component' => $tplContent ? "$tplContent.twig" : null,
-    //         'title' => $props['title'] ?? '',
-    //         'description' => $props['description'] ?? '',
-    //         'keywords' => $props['keywords'] ?? '',
-    //         'canonical' => $props['canonical'] ?? '/' . ltrim($_SERVER['REQUEST_URI'], '/'),
-    //         'content' => $props['content'] ?? '',
-    //     ]);
-    //     try {
-    //         $template = $this->environment->load('main.twig');
-    //         return $template->render($vars);
-    //     } catch (\Throwable $e) {
-    //         return "Error {$e->getCode()}: {$e->getMessage()}";
-    //     }
-    // }
+    
 
-    // public function renderError(string $message, int $code = 0): string {
-    //     $errorName = "Ошибка " ;
-    //     //. ($code > 0 ? "$code" : "");
-    //     //$canonical = "/error" ;
-    //     //. ($code > 0 ? "$code" : "");
-    //     return $this->renderPage('classnotfound.twig', ['error_name' => $errorName, 'error_message' => $message]);
-    // }
 }
