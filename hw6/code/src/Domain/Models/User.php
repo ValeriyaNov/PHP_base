@@ -2,11 +2,14 @@
 
 namespace Geekbrains\Application1\Domain\Models;
 use Geekbrains\Application1\Application\Application;
+use Geekbrains\Application1\Application\Auth;
 
 
 class User {
 
     private ?int $idUser;
+
+    private ?string $userLogin;
 
     private ?string $userName;
 
@@ -14,12 +17,28 @@ class User {
 
     private ?int $userBirthday;
 
-    public function __construct(string $name = null, string $lastName = null, int $birthday = null, int $id_user = null){
+    private ?string $userPasswordHash;
+
+    private ?string $userRole;
+
+    public function __construct(
+            int $id = null, 
+            string $login = null, 
+            string $name = null, 
+            string $lastName = null, 
+            int $birthday = null, 
+            string $passwordHash = null, 
+            string $role = null) {
+        $this->idUser = $id;
+        $this->userLogin = $login;
         $this->userName = $name;
         $this->userLastName = $lastName;
         $this->userBirthday = $birthday;
-        $this->idUser = $id_user;
+        $this->userPasswordHash = $passwordHash;
+        $this->userRole = $role;
     }
+
+    
 
     public function setUserName(string $userName) : void {
         $this->userName = $userName;
@@ -43,55 +62,105 @@ class User {
             $this->idUser = $id_user;
         }
 
-        public function getUserId(): ?int {
+    public function getUserId(): ?int {
             return $this->idUser;
         }
     public function setBirthdayFromString(string $birthdayString) : void {
         $this->userBirthday = strtotime($birthdayString);
     }
+
+    public function setPasswordHash(string $userPasswordHash) : void {
+        $this->userPasswordHash = $userPasswordHash;
+    }
+
+    public function getUserPasswordHash(): string {
+        return $this->userPasswordHash;
+    }
+
+    public function setUserRole(string $userRole) : void {
+        $this->userRole = $userRole;
+    }
+
+    public function getUserRole(): string {
+        return $this->userRole;
+    }
+    public function setUserLogin(int $userLogin): void {
+        $this->userLogin = $userLogin;
+    }
+
+    public function getUserLogin(): string {
+        return $this->userLogin;
+    }
+
     
 
     public static function getAllUsersFromStorage(): array {
         $sql = "SELECT * FROM users";
-
         $handler = Application::$storage->get()->prepare($sql);
         $handler->execute();
         $result = $handler->fetchAll();
-
         $users = [];
-
         foreach($result as $item){
-            $user = new User($item['user_name'], $item['user_lastname'], $item['user_birthday_timestamp']);
+            $user = new User(
+                $item['id_user'], 
+                $item['user_login'], 
+                $item['user_name'], 
+                $item['user_lastname'],
+                $item['user_birthday_timestamp'],
+                $item['user_password_hash'],
+                $item['user_role']);
             $users[] = $user;
         }
-        
         return $users;
     }
 
+
     public static function validateRequestData(): bool{
-        if(
-            isset($_GET['name']) && !empty($_GET['name']) &&
-            isset($_GET['lastname']) && !empty($_GET['lastname']) &&
-            isset($_GET['birthday']) && !empty($_GET['birthday'])
-        ){
-            return true;
-        }
-        else{
-            return false;
-        }
+        return isset($_POST['login']) && !empty($_POST['login'])
+        && preg_match('/^[A-ZА-Яa-zа-я]+$/u', $_POST['login'])
+        && isset($_POST['name']) && !empty($_POST['name'])
+        && preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['name'])
+        && isset($_POST['lastname']) && !empty($_POST['lastname'])
+        && preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['lastname'])
+        && isset($_POST['birthday']) && !empty($_POST['birthday'])
+        && preg_match('/^(\d{2}-\d{2}-\d{4})$/', $_POST['birthday'])
+        && isset($_POST['password']) && !empty($_POST['password'])
+
+        && isset($_SESSION['csrf_token'])
+        && $_SESSION['csrf_token'] == $_POST['csrf_token']
+        ;
     }
 
     public function setParamsFromRequestData(): void {
-        $this->userName = $_GET['name'];
-        $this->userLastName = $_GET['lastname'];
-        $this->setBirthdayFromString($_GET['birthday']); 
+        if ($_POST['id'] != '') {
+            $this->idUser = htmlspecialchars($_POST['id']);
+        }
+        $this->userLogin = htmlspecialchars($_POST['login']);
+        $this->userName = htmlspecialchars($_POST['name']);
+        $this->userLastName = htmlspecialchars($_POST['lastname']);
+        $this->setBirthdayFromString($_POST['birthday']); 
+        $this->userPasswordHash = Auth::getPasswordHash($_POST['password']);
+        $this->userRole = "guest";
     }
-
     public function saveToStorage(){
-        $sql = "INSERT INTO users(user_name, user_lastname, user_birthday_timestamp) VALUES (:user_name, :user_lastname, :user_birthday)";
-
+        $sql = "INSERT INTO users(user_login, user_name, user_lastname, user_birthday_timestamp, user_password_hash, user_role) VALUES (:user_login, :user_name, :user_lastname, :user_birthday, :user_password_hash, :user_role)";
         $handler = Application::$storage->get()->prepare($sql);
         $handler->execute([
+            'user_login' => $this->userLogin,
+            'user_name' => $this->userName,
+            'user_lastname' => $this->userLastName,
+            'user_birthday' => $this->userBirthday,
+            'user_password_hash' => $this->userPasswordHash,
+            'user_role' => $this->userRole
+        ]);
+    }
+
+
+    public function updateInStorage(): void{
+        $sql = "UPDATE users SET user_name = :user_name, user_lastname = :user_lastname, user_birthday_timestamp = :user_birthday WHERE id_user = :id";
+        $handler = Application::$storage->get()->prepare($sql);
+        $handler->execute([
+            'id' => $this->idUser, 
             'user_name' => $this->userName,
             'user_lastname' => $this->userLastName,
             'user_birthday' => $this->userBirthday

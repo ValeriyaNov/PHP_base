@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html >
+<html random={{ random_int }}>
     <head>
         <title>{{ title }}</title>
         <style>{{ style }}</style>
@@ -11,9 +11,15 @@
                 {% include 'sidebar.twig' %}
             </div>
             <div class="box-right"> 
-                 {% include content_template_name %}
+                 {% if islogin %}
+                    <p>Добро пожаловать, {{ username }}</p>
+                {% endif %}
+                {% include content_template_name %}
             </div>
         </div>
         {% include 'footer.twig' %}
     </body>
 </html>
+
+
+    

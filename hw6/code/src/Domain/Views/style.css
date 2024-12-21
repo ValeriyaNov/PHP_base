@@ -73,3 +73,12 @@ a {
 	padding: 10px;
 	border-radius: 10px;	
 }
+.user-container{
+	display: flex;
+	margin: 10px;
+  gap: 15px;
+}
+
+.user-info{
+	width: 500px;
+}
