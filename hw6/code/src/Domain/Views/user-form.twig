@@ -1,4 +1,4 @@
-<form action="/user/{{ action }}/" method="post">
+<form action="/user/{{ action}}/" method="post">
   <input id="csrf_token" type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <input id="user-id" type="hidden" name="id" value="{{ id }}">
   {% if not editing %}

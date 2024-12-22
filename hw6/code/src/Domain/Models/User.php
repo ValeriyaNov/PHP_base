@@ -3,6 +3,7 @@
 namespace Geekbrains\Application1\Domain\Models;
 use Geekbrains\Application1\Application\Application;
 use Geekbrains\Application1\Application\Auth;
+use Exception;
 
 
 class User {
@@ -115,20 +116,39 @@ class User {
     }
 
 
-    public static function validateRequestData(): bool{
-        return isset($_POST['login']) && !empty($_POST['login'])
-        && preg_match('/^[A-ZА-Яa-zа-я]+$/u', $_POST['login'])
-        && isset($_POST['name']) && !empty($_POST['name'])
-        && preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['name'])
-        && isset($_POST['lastname']) && !empty($_POST['lastname'])
-        && preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['lastname'])
-        && isset($_POST['birthday']) && !empty($_POST['birthday'])
-        && preg_match('/^(\d{2}-\d{2}-\d{4})$/', $_POST['birthday'])
-        && isset($_POST['password']) && !empty($_POST['password'])
-
-        && isset($_SESSION['csrf_token'])
-        && $_SESSION['csrf_token'] == $_POST['csrf_token']
-        ;
+    public static function validateRequestData(): void{
+        if (isset($_POST['login']) && empty($_POST['login'])) {
+            throw new \Exception("Не введен логин");
+        }
+        if (!preg_match('/^[A-ZА-Яa-zа-я]+$/u', $_POST['login'])) {
+            throw new \Exception("Некорректно введен логин - используйте только буквы вне зависимости от регистра");
+        }
+        if (isset($_POST['name']) && empty($_POST['name'])) {
+            throw new \Exception("Не введено имя");
+        }
+        if (!preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['name'])) {
+            throw new \Exception("Некорректно введено имя - используейте только буквы, начиная с прописной");
+        }
+        if (isset($_POST['lastname']) && empty($_POST['lastname'])) {
+            throw new \Exception("Не введена фамилия");
+        }
+        if (!preg_match('/^[A-ZА-Я][a-zа-я]+$/u', $_POST['lastname'])) {
+            throw new \Exception("Некорректно введена фамилия - используейте только буквы, начиная с прописной");
+        }
+        if (isset($_POST['birthday']) && empty($_POST['birthday'])) {
+            throw new \Exception("Не введена дата рождения");
+        }
+        if (!preg_match('/^(\d{2}-\d{2}-\d{4})$/', $_POST['birthday'])) {
+            throw new \Exception("Введетите дату рождения в формате DD-MM-YYYY");
+        }
+        if (isset($_POST['password']) && empty($_POST['password'])) {
+            throw new \Exception("Не введен пароль");
+        }
+        if (!isset($_SESSION['csrf_token']) 
+        || $_SESSION['csrf_token'] != $_POST['csrf_token']) 
+    {
+            throw new \Exception("Ошибка. Подмена формы");
+        }
     }
 
     public function setParamsFromRequestData(): void {
