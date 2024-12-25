@@ -11,6 +11,7 @@ use Geekbrains\Application1\Domain\Controllers\PageController;
 class UserController extends AbstractController {
     protected array $actionsPermissions = [
         'actionIndex' => ['admin', 'guest'],
+        'actionIndexRefresh' => ['admin', 'guest'],
         'actionCreate' => ['admin'],
         'actionEdit' => ['admin'],
         'actionDelete' => ['admin'],
@@ -22,7 +23,12 @@ class UserController extends AbstractController {
 
     public function actionIndex() {
         $users = User::getAllUsersFromStorage();
-        
+        $isAdmin = false;
+        foreach($users as $user){
+            if ($user->getUserId() == $_SESSION['id_user'] && $user->getUserRole() == "admin") {
+                $isAdmin = true;                
+            }
+        }
         $render = new Render();
 
         return $render->renderPage(
@@ -31,9 +37,24 @@ class UserController extends AbstractController {
                 [
                     'title' => 'Список пользователей в хранилище',
                     'users' => $users,
+                    'isAdmin' => $isAdmin
                 ]));
     }
 
+    public function actionIndexRefresh(){
+        $limit = null;
+        if(isset($_GET['maxId']) && ($_GET['maxId'] > 0)){
+            $limit = (int) $_GET['maxId'];
+        }
+        $users = User::getAllUsersFromStorage($limit);
+        $usersData = [];
+        if(count($users) > 0) {
+            foreach($users as $user){
+                $usersData[] = $user->getUserDataAsArray();
+            }
+        }
+        return json_encode($usersData);
+    }
 
     public function actionCreate(): string {
         $render = new Render();
@@ -73,7 +94,9 @@ class UserController extends AbstractController {
     public function actionDelete(): string {
         if(User::exists($_POST['id'])) {
             User::deleteFromStorage($_POST['id']);
-            return $this->actionIndex();
+            //return $this->actionIndex();
+            $pageController = new PageController();
+            return $pageController->actionIndex();
         }
         else {
             throw new Exception("Пользователя не существует");
@@ -86,7 +109,9 @@ class UserController extends AbstractController {
             $user->setParamsFromRequestData();
             $user->saveToStorage();
 
-            return $this->actionIndex();
+            //return $this->actionIndex();
+            $pageController = new PageController();
+            return $pageController->actionIndex();
         
     }
 
@@ -96,7 +121,9 @@ class UserController extends AbstractController {
             $user = new User();
             $user->setParamsFromRequestData();
             $user->updateInStorage();
-            return $this->actionIndex();
+            //return $this->actionIndex();
+            $pageController = new PageController();
+            return $pageController->actionIndex();
         
     }
 

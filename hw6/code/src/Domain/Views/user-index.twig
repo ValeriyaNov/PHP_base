@@ -1,25 +1,94 @@
-<p>Список пользователей в хранилище</p>
+<section class="py-5 text-center container">
+    <div class="row py-lg-5">
+      <div class="col-lg-6 col-md-8 mx-auto">
+        <p class="lead text-body-secondary">Список пользователей в хранилище</p>
+      </div>
+    </div>
+</section>
 
-<ul>
+<div id="user_data_container" class="container">
+    {% include 'user-index-header.twig' %}
     {% for user in users %}
-        <div class="user-container">
-            <li class="user-info">{{ user.getUserName() }} {{ user.getUserLastName() }}. День рождения: {{ user.getUserBirthday() | date('d-m-Y') }}</li>
-            <form action="/user/edit/" method="post">
-                <input type="hidden" name="id" value="{{ user.getUserId() }}">
-                <input type="hidden" name="login" value="{{ user.getUserLogin() }}">
-                <input type="hidden" name="name" value="{{ user.getUserName() }}">
-                <input type="hidden" name="lastname" value="{{ user.getUserLastName() }}">
-                <input type="hidden" name="birthday" value="{{ user.getUserBirthday() }}">
-                <input type="hidden" name="password" value="{{ user.getUserPasswordHash() }}">
-                <input type="submit" value="Редактировать">
-            </form>
-            <form action="/user/delete/" method="post">
-                <input type="hidden" name="id" value="{{ user.getUserId() }}">
-                <input type="submit" value="Удалить">
-            </form>
-        </div>    
+        {% include 'user-index-row.twig' %}
     {% endfor %}
-    <form action="/user/create/" method="post">
-        <input type="submit" value="Сoздать пользователя">
-    </form>
-</ul>
+</div>
+{% if isAdmin %}
+    {% include 'user-index-footer.twig' %}
+{% endif %}
+
+
+
+<script>
+
+    function deleteUser(userId) {
+        $.ajax({
+            method: 'POST',
+            url: "/user/delete/",
+            data: { id: userId}
+        }).done(function (response) {
+            document.getElementById("userId" + userId).remove();
+        });
+    }
+
+    function getUserIdArray() {
+        let ids = document.getElementsByClassName('table-column-user-id');
+        let result = [];
+        for (let i = 0; i < ids.length; i++) {
+            result.push(Number(ids[i].textContent));
+        }
+        return result;
+    }
+    
+
+    var template = `        
+        <div id="userIdUSER_ID" class="row mb-3 text-center">
+            <div class="col-2 themed-grid-col table-column-user-id">USER_ID</div>
+            <div class="col-2 themed-grid-col">USER_NAME</div>
+            <div class="col-2 themed-grid-col">USER_LAST_NAME</div>    
+            <div class="col-2 themed-grid-col">USER_BIRTHDAY</div>
+            <div class="col-2 themed-grid-col">
+                <form action="/user/edit/" method="post" target="_blank">
+                    <input type="hidden" name="id" value="USER_ID">
+                    <input type="hidden" name="login" value="USER_LOGIN">
+                    <input type="hidden" name="name" value="USER_NAME">
+                    <input type="hidden" name="lastname" value="USER_LAST_NAME">
+                    <input type="hidden" name="birthday" value="USER_BIRTHDAY">
+                    <input type="hidden" name="password" value="USER_PASSWORD">
+                    <input type="submit" class="btn btn-secondary w-100 py-2" value="Редактировать">
+                </form>            
+            </div>    
+            <div class="col-2 themed-grid-col">
+                <button type="button" class="btn btn-secondary w-100 py-2" onClick="deleteUser(USER_ID)">Удалить</button>            
+            </div>    
+        </div> 
+    `;
+
+ 
+    setInterval(function () {
+        
+        let maxId = -1;
+        array.forEach(element => {
+            maxId = Math.max(maxId, element)
+        });
+
+        $.ajax({
+            method: 'GET',
+            url: "/user/indexRefresh/",
+            data: { maxId: maxId }
+        }).done(function (response) {
+            let users = $.parseJSON(response);
+            for(var k in users){
+                var text = template;
+                text = text.replaceAll('USER_ID', users[k].id);
+                text = text.replaceAll('USER_LOGIN', users[k].userlogin);
+                text = text.replaceAll('USER_NAME', users[k].username);
+                text = text.replaceAll('USER_LAST_NAME', users[k].userlastname);
+                text = text.replaceAll('USER_BIRTHDAY', users[k].userbirthday);
+                text = text.replaceAll('USER_PASSWORD', users[k].userpassword);
+                $('#user_data_container').append(text);
+            }
+
+        });
+    }, 1000);
+
+</script>  
